@@ -1,33 +1,16 @@
-tasks:
-  - name: Docker Kurulumu ve Başlatma
-    # init: Sadece ve sadece workspace İLK KEZ OLUŞTURULURKEN çalışır.
-    # Bu yüzden yeni bir workspace açmak ZORUNLU.
-    init: |
-      echo "Docker servisi (daemon) başlatılıyor..."
-      # Servisi root olarak başlatıyoruz.
-      sudo dockerd &
-      # Servisin başlaması için birkaç saniye beklemesi kritik olabilir.
-      sleep 5
-      # Gitpod'a daemon'un hazır olduğuna dair bir sinyal gönderiyoruz.
-      gp sync-done docker-ready
+# Bu satır, workspace'e Docker ve iptables gibi
+# sistem seviyesi araçları kullanma yetkisi verir.
+# Bu, "Permission denied (you must be root)" hatasını çözer.
+privileged: true
 
-    # command: Workspace her açıldığında (veya yeniden başlatıldığında) çalışır.
+tasks:
+  - name: Docker'ı Başlat ve Ayarla
+    init: |
+      # Daemon'u arka planda başlat. Ayrıcalıklı modda bu sorunsuz çalışacaktır.
+      dockerd > /dev/null 2>&1 &
+      # Daemon'un başlaması için birkaç saniye bekle.
+      sleep 5
     command: |
-      echo "Docker daemon'un hazır olması bekleniyor..."
-      # 'init' adımındaki 'docker-ready' sinyalini bekliyoruz. Bu, bağlantı hatasını önler.
-      gp sync-await docker-ready
-      echo "İzinler ayarlanıyor (sudo gerekmemesi için)..."
-      # gitpod kullanıcısını docker grubuna ekliyoruz.
-      sudo usermod -aG docker $USER
-      
-      echo ""
-      echo "------------------------------------------------------------"
-      echo -e "\033[32mDocker başarıyla ayarlandı ve çalışıyor!\033[0m"
-      echo "MEVCUT TERMİNALİ KAPATIP YENİ BİR TANE AÇ."
-      echo "Yeni terminalde 'docker ps' komutuyla test edebilirsin."
-      echo "------------------------------------------------------------"
-      
-# Gerekirse portları burada açabilirsin ama genellikle otomatik algılar.
-# ports:
-#   - port: 6901
-#     onOpen: open-preview
+      # İzinleri ayarla ki her seferinde sudo yazmak zorunda kalma.
+      sudo chmod 666 /var/run/docker.sock
+      echo -e "\n\033[32mDocker hazır! 'docker ps' komutuyla test edebilirsin.\033[0m"
