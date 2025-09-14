@@ -1,16 +1,18 @@
-# Bu satır, workspace'e Docker ve iptables gibi
-# sistem seviyesi araçları kullanma yetkisi verir.
-# Bu, "Permission denied (you must be root)" hatasını çözer.
-privileged: true
+# Gitpod'a diyoruz ki: Workspace'i standart imajla değil,
+# bizim sağladığımız bu Dockerfile ile oluştur.
+image:
+  file: .gitpod.Dockerfile
 
 tasks:
-  - name: Docker'ı Başlat ve Ayarla
-    init: |
-      # Daemon'u arka planda başlat. Ayrıcalıklı modda bu sorunsuz çalışacaktır.
-      dockerd > /dev/null 2>&1 &
-      # Daemon'un başlaması için birkaç saniye bekle.
-      sleep 5
+  - name: Docker Daemon'u Başlat
     command: |
-      # İzinleri ayarla ki her seferinde sudo yazmak zorunda kalma.
-      sudo chmod 666 /var/run/docker.sock
-      echo -e "\n\033[32mDocker hazır! 'docker ps' komutuyla test edebilirsin.\033[0m"
+      # Root yetkisiyle Docker servisini arka planda başlatıyoruz.
+      # Çıktıları /dev/null'a göndererek terminali kirletmesini engelliyoruz.
+      sudo dockerd > /dev/null 2>&1 &
+      
+      # Daemon'un başlaması için bekliyoruz.
+      sleep 5
+      
+      echo -e "\n\033[32mDocker hazır. Bu terminali kullanabilirsin.\033[0m"
+      # Shell'i açık tut ki terminal kapanmasın.
+      bash
